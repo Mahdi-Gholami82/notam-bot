@@ -3,14 +3,14 @@ sys.path.append('D:\\notamlinux\\notamlinux')
 #//home//notamste//notamlinux//notambot
 
 
-from time import strftime, strptime, time
-from config import NOTAM_URL
+from time import strftime, strptime
+from config import DATABASE_PATH, NOTAM_URL
 from modules.notamScrapper import scrap_notam
 import sqlite3
 import re
-from modules.coordinateTools import dms_to_dd, sort_coordinates
+from modules.coordinateTools import dms_to_dd
 
-conn = sqlite3.connect('saved_notams.db')
+conn = sqlite3.connect(DATABASE_PATH)
 with conn:
     cursor = conn.cursor()
     cursor.execute("PRAGMA foreign_keys = ON;")
@@ -79,113 +79,120 @@ def save_notam(notam):
         except Exception as e:
             print(f'Exception: {e}')
             return
+    
+class DataBaseManager:
+    def __init__(self,database_path : str,initialize_update = False,retry_for = 0):
+        self.initialize_update = initialize_update
+        self.database_path = database_path
 
-def get_notam_db_id(notam):
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM notams WHERE notam_text=:notam',{'notam' : notam})
-        notam_db_id = cursor.fetchone()
-    return notam_db_id[0]
+        self.stripped_notams = list()
+        self.as_of = str() 
+        self.number_of_notams = int()
+        self.updated = bool()
 
-
-
-def set_is_sent(notam_db_id):
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute("UPDATE notams SET is_sent=1 WHERE notam_db_id=:notam_db_id",{'notam_db_id':notam_db_id})
-
-def get_total():
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT notam_db_id FROM notams")
-        return cursor.fetchall()
-
-if __name__ == '__main__':
-    pass
-else :
-    # updating the data base with new notams when imported as module <<<<<<
-    Updated = False
-    scrapped_notams = scrap_notam(NOTAM_URL)
-    if scrapped_notams:
-        notams, as_of, number_of_notams = scrapped_notams
-        if int(number_of_notams) == len(notams):
-            print('Updating notams...')
-            Updated = True
-            with conn:
-                cursor.execute("INSERT OR REPLACE INTO db_variables (name,value) VALUES (?, ?)", ('as_of', as_of))
-                cursor = conn.cursor()
-                cursor.execute('SELECT notam_text FROM notams')
-                notam_texts = cursor.fetchall()
-            for notam in notams:
-                if not notam.strip() in notam_texts:
-                    save_notam(notam)
-
-        stripped_notams = [notam.strip() for notam in notams]   
-        # >>>>>>
-    else:
-        notams, number_of_notams = None,None
-        with conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT value FROM db_variables WHERE name=:as_of",{'as_of':'as_of'})
-            as_of = cursor.fetchone()[0]
-
-
-def get_not_sent_notams():
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute("""SELECT notam_db_id,notam_id,notam_text,created_at FROM notams WHERE is_sent=0 
-                       ORDER BY STRFTIME("%Y-%m-%d %H:%M:%S", created_at)""")
-        not_sent_notams = cursor.fetchall()
-    return not_sent_notams
-
-def get_all_coordinated_notams():
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute("""SELECT DISTINCT 
-                            notam_id
-                            FROM notams n
-                            INNER JOIN coordinates c ON n.notam_db_id = c.notam_db_id;
-                        """)
-        fetch = cursor.fetchall()  
-        coordinated_notams = list(sum(fetch,()))  
-    return coordinated_notams, as_of
-
-def get_all_coordinates(notam_id) -> dict[str,list]:
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute("""SELECT coordinates.latitude, coordinates.longitude, coordinates.radius
-            FROM notams INNER JOIN coordinates ON notams.notam_db_id = coordinates.notam_db_id
-            WHERE notams.notam_id = :notam_id AND coordinates.radius IS NOT NULL;""",{'notam_id':notam_id})
-        coordinates_with_radius = cursor.fetchall()
-
-        cursor.execute("""SELECT coordinates.latitude, coordinates.longitude
-            FROM notams INNER JOIN coordinates ON notams.notam_db_id = coordinates.notam_db_id
-            WHERE notams.notam_id = :notam_id AND coordinates.radius IS NULL;""",{'notam_id':notam_id})
-        coordinates_without_radius = cursor.fetchall()
-
-    return  coordinates_with_radius, coordinates_without_radius
-
-def get_notam_text(notam_id):
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT notam_text FROM notams WHERE notam_id=:notam_id',{'notam_id' : notam_id})
-        notam_texts = cursor.fetchall()
-        notam_text = ''.join(sum(notam_texts,())[0])
-
-    return notam_text
-
-
-def clean_db():
-    if Updated:
-        print('cleaning the database...')
+        conn = sqlite3.connect(database_path)
         with conn:
             cursor = conn.cursor()
             cursor.execute("PRAGMA foreign_keys = ON;")
-            cursor.execute('SELECT notam_db_id,notam_text FROM notams WHERE is_sent=1')
-            notams_in_db = cursor.fetchall()  
-            for notam_in_db in notams_in_db:
+        if initialize_update:
+            for retry in range(retry_for + 1):
+                self.updated = self.update_db()
 
-                notam_db_id,notam_text = notam_in_db
-                notam_text_stripped = notam_text.strip()
-                if notam_text_stripped not in stripped_notams:
-                    cursor.execute('DELETE FROM notams WHERE notam_db_id=:notam_db_id;',{'notam_db_id':notam_db_id})
+                if self.updated :
+                    break
+
+
+    def update_db(self):
+        scrapped_notams = scrap_notam(NOTAM_URL)
+
+        # checking if scrapping notams was successful
+        if scrapped_notams:
+            notams, as_of, self.number_of_notams = scrapped_notams
+            self.as_of = as_of
+            # double checking
+            if int(self.number_of_notams) == len(notams):
+                print('Updating notams...')
+                with conn:
+                    cursor = conn.cursor()  
+                    cursor.execute("INSERT OR REPLACE INTO db_variables (name,value) VALUES (?, ?)", ('as_of', as_of))
+                    cursor.execute('SELECT notam_text FROM notams')
+                    notam_texts = cursor.fetchall()
+                for notam in notams:
+                    if not notam.strip() in notam_texts:
+                        save_notam(notam)
+
+            self.stripped_notams = [notam.strip() for notam in notams]   
+            return True
+        
+        print("failed to update.")
+        notams, self.number_of_notams = None,None
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM db_variables WHERE name=:as_of",{'as_of':'as_of'})
+            self.as_of = cursor.fetchone()[0]
+        return False
+    
+    def get_not_sent_notams(self):
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("""SELECT notam_db_id,notam_id,notam_text,created_at FROM notams WHERE is_sent=0 
+                        ORDER BY STRFTIME("%Y-%m-%d %H:%M:%S", created_at)""")
+            not_sent_notams = cursor.fetchall()
+        return not_sent_notams
+    
+    def get_all_coordinated_notams(self):
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("""SELECT DISTINCT 
+                                notam_id
+                                FROM notams n
+                                INNER JOIN coordinates c ON n.notam_db_id = c.notam_db_id;
+                            """)
+            fetch = cursor.fetchall()  
+            coordinated_notams = list(sum(fetch,()))  
+        return coordinated_notams   
+
+    def get_all_coordinates(self,notam_id) -> dict[str,list]:
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("""SELECT coordinates.latitude, coordinates.longitude, coordinates.radius
+                FROM notams INNER JOIN coordinates ON notams.notam_db_id = coordinates.notam_db_id
+                WHERE notams.notam_id = :notam_id AND coordinates.radius IS NOT NULL;""",{'notam_id':notam_id})
+            coordinates_with_radius = cursor.fetchall()
+
+            cursor.execute("""SELECT coordinates.latitude, coordinates.longitude
+                FROM notams INNER JOIN coordinates ON notams.notam_db_id = coordinates.notam_db_id
+                WHERE notams.notam_id = :notam_id AND coordinates.radius IS NULL;""",{'notam_id':notam_id})
+            coordinates_without_radius = cursor.fetchall()
+
+        return  coordinates_with_radius, coordinates_without_radius
+
+    def get_notam_text(self,notam_id):
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT notam_text FROM notams WHERE notam_id=:notam_id',{'notam_id' : notam_id})
+            notam_texts = cursor.fetchall()
+            notam_text = ''.join(sum(notam_texts,())[0])
+
+        return notam_text
+    
+    def set_is_sent(self,notam_db_id):
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE notams SET is_sent=1 WHERE notam_db_id=:notam_db_id",{'notam_db_id':notam_db_id})
+
+
+    def clean_db(self):
+        if self.updated:
+            print('cleaning the database...')
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA foreign_keys = ON;")
+                cursor.execute('SELECT notam_db_id,notam_text FROM notams WHERE is_sent=1')
+                notams_in_db = cursor.fetchall()  
+                for notam_in_db in notams_in_db:
+
+                    notam_db_id,notam_text = notam_in_db
+                    notam_text_stripped = notam_text.strip()
+                    if notam_text_stripped not in self.stripped_notams:
+                        cursor.execute('DELETE FROM notams WHERE notam_db_id=:notam_db_id;',{'notam_db_id':notam_db_id})

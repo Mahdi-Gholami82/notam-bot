@@ -1,3 +1,9 @@
 test.py
 test2.py
 debug/
+saved_notams.db
+Pipfile.lock
+Pipfile
+media/result.png
+data/iran_map.html
+__pycache__/

@@ -2,11 +2,11 @@ import sys
 
 sys.path.append('D:\\notamlinux\\notamlinux')
 
-from modules.dbManager import clean_db, get_all_coordinated_notams
+from modules.dbManager import DataBaseManager
 import asyncio
 import telegram
 from telegram.error import NetworkError
-from config import CHANNEL_ID, HTML_PATH, IMAGE_PATH, TEMPLATE_PATH, TOKEN
+from config import CHANNEL_ID, HTML_PATH, IMAGE_PATH, TEMPLATE_PATH, TOKEN, DATABASE_PATH
 from folium import Map
 from PIL import Image
 from modules.html2png import pngify
@@ -30,12 +30,19 @@ def add_template(template_path : Image,image_path : Image):
     img.save(image_path)
 
 if __name__ == '__main__':
-    notams, as_of = get_all_coordinated_notams()
+
+    db = DataBaseManager(
+                     DATABASE_PATH,
+                     initialize_update=True,
+                     retry_for=1
+                     )
+    notams= db.get_all_coordinated_notams()
+    as_of = db.as_of
 
     #creating the map
     iran_center = [32.4279, 53.6880]
     my_map = Map(location=iran_center,zoom_start=6,zoom_control=False, tiles="Cartodb dark_matter")
-    draw_all_ntms(notams,my_map)
+    draw_all_ntms(notams,my_map,db)
     add_date_and_time(as_of,my_map)
 
     #saving the map and converting it to a png image

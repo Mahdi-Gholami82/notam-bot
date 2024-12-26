@@ -1,6 +1,6 @@
 from folium import Map, Element
 from folium.vector_layers import Polygon,Circle
-from modules.dbManager import get_all_coordinates, get_notam_text
+from modules.dbManager import DataBaseManager
 import sqlite3
 
 conn = sqlite3.connect('saved_notams.db')
@@ -32,12 +32,12 @@ def draw_ntm_on_map(map : Map, color : str, coordinates : tuple,shape_type : str
             fill_opacity = 0.4,
         ).add_to(map)
 
-def draw_all_ntms(notams,map : Map):
+def draw_all_ntms(notams,map : Map,db : DataBaseManager):
     print(f'adding {len(notams)} highlighted area\'s to the map')
     for notam in notams:
-        coordinates_with_radius, coordinates_without_radius = get_all_coordinates(notam)
+        coordinates_with_radius, coordinates_without_radius = db.get_all_coordinates(notam)
         # coordinates = get_all_coordinates(notam)
-        notam_text = get_notam_text(notam)
+        notam_text = db.get_notam_text(notam)
         if 'GUN FIRING' in notam_text:
             color = 'Red'
         elif 'ROCKET LAUNCHES' in notam_text:

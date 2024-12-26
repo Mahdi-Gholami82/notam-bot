@@ -16,7 +16,7 @@ def scrap_notam(notam_link: str) -> iter:
         print(f'{number_of_notams=}')
         notams = [notam.text for notam in notams]
         as_of = soup.find('span',class_='textRed12').text
-        return notams,as_of,number_of_notams
+        return notams,as_of,int(number_of_notams)
     except Exception as e:
         print(f'scrapping failed : {e}')
         return None

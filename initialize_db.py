@@ -1,6 +1,7 @@
 import sqlite3
+from config import DATABASE_PATH
 
-conn = sqlite3.connect('saved_notams.db')
+conn = sqlite3.connect(DATABASE_PATH)
 cursor = conn.cursor()
 
 cursor.execute("""CREATE TABLE notams(

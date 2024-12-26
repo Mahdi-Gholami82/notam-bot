@@ -1,14 +1,15 @@
 import sys
 
 sys.path.append('D:\\notamlinux\\notamlinux')
-from modules.dbManager import clean_db, get_not_sent_notams, set_is_sent
+from modules.dbManager import DataBaseManager
 
 import asyncio
 import telegram
 from telegram.constants import ParseMode
 from telegram.error import NetworkError, RetryAfter
-from config import CHANNEL_ID, TOKEN
+from config import CHANNEL_ID, DATABASE_PATH, TOKEN
 import re
+
 
 def get_notam_rest(notam,notam_id):
     notam = notam.replace('\n',' ')
@@ -48,11 +49,11 @@ async def send_messages(bot_token,notams,chat_id):
             continue
 
         #setting the sent flag to 1
-        set_is_sent(notam_db_id)
+        db.set_is_sent(notam_db_id)
         await asyncio.sleep(1)
 
     #deleting the old notam ids that no longer exist
-    clean_db()
+    db.clean_db()
 
 
 def emoji_selector(notam):
@@ -66,7 +67,14 @@ def emoji_selector(notam):
         
 
 if __name__ == '__main__':
-    notams = get_not_sent_notams()
+    
+    db = DataBaseManager(
+                     DATABASE_PATH,
+                     initialize_update=True,
+                     retry_for=1
+                     )
+    
+    notams = db.get_not_sent_notams()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(send_messages(TOKEN,notams,CHANNEL_ID))
     #telegram closes the loop event automatically
