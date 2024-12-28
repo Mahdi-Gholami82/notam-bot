@@ -1,13 +1,14 @@
+import os
 import sys
-sys.path.append('D:\\notamlinux\\notamlinux')
-#//home//notamste//notamlinux//notambot
 
+current_path = os.getcwd()
+sys.path.append(current_path)
 
+import sqlite3
+import re
 from time import strftime, strptime
 from config import DATABASE_PATH, NOTAM_URL
 from modules.notamScrapper import scrap_notam
-import sqlite3
-import re
 from modules.coordinateTools import dms_to_dd
 
 conn = sqlite3.connect(DATABASE_PATH)

@@ -1,14 +1,16 @@
+import os
 import sys
 
-sys.path.append('D:\\notamlinux\\notamlinux')
-from modules.dbManager import DataBaseManager
+current_path = os.getcwd()
+sys.path.append(current_path)
 
+import re
 import asyncio
 import telegram
 from telegram.constants import ParseMode
 from telegram.error import NetworkError, RetryAfter
 from config import CHANNEL_ID, DATABASE_PATH, TOKEN
-import re
+from modules.dbManager import DataBaseManager
 
 
 def get_notam_rest(notam,notam_id):

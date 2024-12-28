@@ -1,20 +1,22 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-import time
-from os import getcwd
-from os.path import join as joinpath
+import os
+current_path = os.getcwd()
 
-def pngify(path : str ,out : str ,delay : int = 2) -> None:
+import time
+from folium import Map
+from selenium import webdriver
+
+def pngify(map : Map ,html_path,out : str ,delay : int = 2) -> None:
 
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    
+    driver = webdriver.Chrome(options=options)
 
-    #getting the html file
-    driver.get(f'{getcwd()}/{path}')
+    map.save(html_path)
+
+    driver.get(os.path.join(current_path,html_path))
 
     driver.set_window_size(1350, 960)
 

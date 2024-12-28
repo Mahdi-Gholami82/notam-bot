@@ -1,9 +1,12 @@
+import os
+import sys
+
+current_path = os.getcwd()
+sys.path.append(current_path)
+
+import re
 from requests import get
 from bs4 import BeautifulSoup
-import re
-import sys
-sys.path.append('D:\\notamlinux\\notamlinux')
-from config import NOTAM_URL
 
 
 def scrap_notam(notam_link: str) -> iter:
