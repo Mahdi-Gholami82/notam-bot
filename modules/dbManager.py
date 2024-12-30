@@ -28,9 +28,9 @@ def convert_time_standard(time : str):
 def notam_parser(notam : str):
     searching_notam = notam.replace('\n',' ')
     if 'Q)' in searching_notam :
-        match = re.search(r'(.*)Q\).*CREATED:\s*(.*)SOURCE', searching_notam)        
+        match = re.search(r'(.+)Q\).*CREATED:\s*(.+)SOURCE', searching_notam)        
     else :
-        match = re.search(r'(.*)A\).*CREATED:\s*(.*)\s*SOURCE', searching_notam)
+        match = re.search(r'(.+)A\).*CREATED:\s*(.+)\s*SOURCE', searching_notam)
     if match:
         id = match.group(1)
         created = convert_time_standard(match.group(2).strip())

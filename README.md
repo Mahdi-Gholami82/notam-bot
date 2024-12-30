@@ -5,11 +5,11 @@ The bot provides both text updates and visualizations of specific NOTAM regions.
 
 ## **Features**
 
-1. **NOTAM Text Updates (`sendNotamText.py`)**  
+1. **NOTAM Text Updates (`scripts\send_map.py`)**  
    - Sends Iranian NOTAMs directly to a specified Telegram channel as text messages.  
    - Keeps subscribers updated with the latest aviation notices.
 
-2. **NOTAM Region Visualization (`sendMap.py`)**  
+2. **NOTAM Region Visualization (`scripts\send_ntext.py`)**  
    - Highlights and visualizes specific NOTAM regions, including:  
      - RPA (Remotely Piloted Aircraft)  
      - Gun Firing zones  

@@ -39,19 +39,22 @@ async def send_messages(bot_token,notams,chat_id):
         try:
             await bot.send_message(chat_id, text, parse_mode=ParseMode.MARKDOWN_V2)
 
+            db.set_is_sent(notam_db_id)
         #waiting for the telegram flood control limit to pass and then trying again
-        except RetryAfter as e:
-            await asyncio.sleep(e.retry_after+1)
+        except RetryAfter as error:
+            waiting_time = error.retry_after+1
+            print(f"Telegram flood control limit reached waiting for : {waiting_time} seconds...")
+            await asyncio.sleep(waiting_time)
             try:
                 await bot.send_message(chat_id, text, parse_mode=ParseMode.MARKDOWN_V2)
             except:
                 continue
-        except NetworkError as e:
-            print(f"Failed to connect. Error: {e}")
-            continue
+        except NetworkError as error:
+            print(f"Failed to connect. Error: {error}")
+            break
+        except Exception as error:
+            print(f'Error : {error}')
 
-        #setting the sent flag to 1
-        db.set_is_sent(notam_db_id)
         await asyncio.sleep(1)
 
     #deleting the old notam ids that no longer exist

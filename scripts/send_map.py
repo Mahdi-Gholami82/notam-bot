@@ -23,6 +23,8 @@ async def send_image_map(bot_token,path,chat_id,date):
             await bot.send_photo(chat_id,photo,caption)
         except NetworkError as error:
             print(f'Failed to connect to telegram servers : {error}')
+        except Exception as error:
+            print(f'Error : {error}')
 
 if __name__ == '__main__':
 
