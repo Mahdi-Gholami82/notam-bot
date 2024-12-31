@@ -1,6 +1,7 @@
 import sqlite3
 from folium import Map, Element
 from folium.vector_layers import Polygon,Circle
+from modules.coordinateTools import sort_coordinates
 from modules.dbManager import DataBaseManager
 
 conn = sqlite3.connect('saved_notams.db')
@@ -53,11 +54,11 @@ def draw_all_ntms(notams,map : Map,db : DataBaseManager):
                             coordinates_with_radius,
                             'circle'
                             )
-        if coordinates_without_radius:
+        if coordinates_without_radius and len(coordinates_without_radius) > 2:
             draw_ntm_on_map(map,
                             color,
-                            coordinates_without_radius,
-                            'polygon'
+                            sort_coordinates(coordinates_without_radius),
+                            'polygon',
                             )
             
 def add_date_and_time(dt,map : Map) -> None:

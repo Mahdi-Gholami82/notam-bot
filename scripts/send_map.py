@@ -1,8 +1,9 @@
-import os
+from os.path import dirname,abspath,join
 import sys
 
-current_path = os.getcwd()
-sys.path.append(current_path)
+
+project_path = join(dirname(abspath(__file__)),'..')
+sys.path.insert(0,project_path)
 
 import asyncio
 import telegram
@@ -46,7 +47,8 @@ if __name__ == '__main__':
     add_map_guide(my_map)
 
     #saving the map and converting it to a png image
-    pngify(my_map,HTML_PATH,IMAGE_PATH)
+    html_abspath = join(project_path,HTML_PATH)
+    pngify(my_map,html_abspath,IMAGE_PATH)
 
     db.clean_db()
 

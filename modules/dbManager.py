@@ -1,9 +1,3 @@
-import os
-import sys
-
-current_path = os.getcwd()
-sys.path.append(current_path)
-
 import sqlite3
 import re
 from time import strftime, strptime

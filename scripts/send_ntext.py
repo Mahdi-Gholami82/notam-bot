@@ -1,8 +1,9 @@
-import os
+from os.path import dirname,abspath,join
 import sys
 
-current_path = os.getcwd()
-sys.path.append(current_path)
+
+project_path = join(dirname(abspath(__file__)),'..')
+sys.path.insert(0,project_path)
 
 import re
 import asyncio
