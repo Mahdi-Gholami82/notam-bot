@@ -38,15 +38,19 @@ def get_coordinates(notam : str):
     longitude = str()
     notam = notam.replace('\n',' ')
 
-    matches = re.finditer(r'(RADIUS\s*\d+\s*KM.*?)?(\d{6}[NS]).*?(\d{6}[EW])', notam)
+    matches = re.finditer(r'RADIUS\s*(\d+)\s*KM.*?(\d[\d\.]{5,10}[NS]).*?(\d[\d\.]{5,10}[EW])|(\d[\d\.]{5,10}[NS]).*?(\d[\d\.]{5,10}[EW])', notam)
     for match in matches:
-        radius = re.search(r'RADIUS\s*(\d+)\s*KM',str(match.group(1)))
-        if radius : 
-            radius = float(radius.group(1))
-        latitude = dms_to_dd(match.group(2))
-        longitude = dms_to_dd(match.group(3))
+        try:
+            radius = float(match.group(1))
+            latitude = match.group(2)
+            longitude = match.group(3)
+        except:
+            radius = None
+            latitude = match.group(4)
+            longitude = match.group(5)
 
-        match_result = [latitude, longitude, radius]
+
+        match_result = [dms_to_dd(latitude),dms_to_dd(longitude), radius]
         coordinates.append(match_result)
 
     return coordinates

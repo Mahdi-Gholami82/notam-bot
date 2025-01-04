@@ -1,11 +1,16 @@
 from math import atan2
 
 def dms_to_dd(dms):
-    degrees = int(dms[:2])
-    minutes = int(dms[2:4])
-    seconds = int(dms[4:-1])
+
     direction = dms[-1]
+    dms_fx = str(float(dms[:-1]))
+
+    degrees = float(dms_fx[:2])
+    minutes = float(dms_fx[2:4])
+    seconds = float(dms_fx[4:])
+
     decimal_degrees = degrees + (minutes / 60) + (seconds / 3600)
+
     if direction in ['W', 'S']:
         return -decimal_degrees
     return decimal_degrees
