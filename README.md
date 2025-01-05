@@ -38,3 +38,7 @@ Ensure the following libraries are installed before running the scripts:
    ```
 
 3. Use Cron jobs to schedule running both scripts. (To prevent overlapping Cron jobs, you can use a tool like Flocker.)
+
+## **NOTAM Map Preview**  
+
+![](preview.png)
