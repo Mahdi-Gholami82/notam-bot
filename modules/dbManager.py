@@ -187,7 +187,7 @@ class DataBaseManager:
             with conn:
                 cursor = conn.cursor()
                 cursor.execute("PRAGMA foreign_keys = ON;")
-                cursor.execute('SELECT notam_db_id,notam_text FROM notams WHERE is_sent=1 AND created_at < datetime(\'now\',\'-2 day\')')
+                cursor.execute('SELECT notam_db_id,notam_text FROM notams WHERE created_at < datetime(\'now\',\'-1 hour\')')
                 notams_in_db = cursor.fetchall()  
                 for notam_in_db in notams_in_db:
 
